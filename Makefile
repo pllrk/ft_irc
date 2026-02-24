@@ -2,13 +2,13 @@ NAME = ft_irc
 CC = c++
 CFLAGS = -Wall -Werror -Wextra -g -std=c++98
 SRCS =	main.cpp \
-		Server.cpp 
+		Server.cpp
 		
 OBJS = ${SRCS:.cpp=.o}
 
 # Rule to create .o files from .c files
 %.o: %.cpp
-	$(CC) $(CFLAGS) -cpp $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # Main target
 all: $(NAME)

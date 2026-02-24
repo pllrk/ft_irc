@@ -1,15 +1,20 @@
-#include <iostream>
-
 #ifndef Server_HPP
 # define Server_HPP
+
+#include <string>
 
 class Server
 {
 private:
-	/* data */
+	int _port;
+	int _serverFd;
+	std::string _password;
+
 public:
-	Server(/* args */);
+	Server(int port, const std::string &password);
 	~Server();
+
+	void run();
 };
 
 #endif

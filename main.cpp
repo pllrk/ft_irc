@@ -1,10 +1,6 @@
 #include <string>
 #include <iostream>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <fcntl.h>
-#include <poll.h>
-#include <iostream>
+#include <cstdlib>
 #include "Server.hpp"
 
 
@@ -32,8 +28,17 @@ int main(int argc, char** argv)
 		std::cerr << e.what() << std::endl;
 		return 1;
 	}
-	// std::cout << "Port: " << port << std::endl;
-	
+	try
+	{
+		// Start server lifecycle: socket setup + poll loop.
+		Server server(port, password);
+		server.run();
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << e.what() << std::endl;
+		return 1;
+	}
 
 	return 0;
 }
