@@ -2,7 +2,8 @@ NAME = ft_irc
 CC = c++
 CFLAGS = -Wall -Werror -Wextra -g -std=c++98
 SRCS =	main.cpp \
-		Server.cpp
+		Server.cpp \
+		Client.cpp \
 		
 OBJS = ${SRCS:.cpp=.o}
 
