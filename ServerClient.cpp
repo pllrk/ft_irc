@@ -1,6 +1,7 @@
 #include "Server.hpp"
 #include <sys/socket.h>
 #include <cctype>
+#include <unistd.h>
 
 // Parse and route incoming IRC commands
 void Server::_handleCommand(Client &client, const std::string &line)
@@ -22,6 +23,10 @@ void Server::_handleCommand(Client &client, const std::string &line)
 		_cmdPart(client, params);
 	else if (cmd == "PRIVMSG")
 		_cmdPrivMsg(client, params, rest);
+	else if (cmd == "QUIT")
+		_cmdQuit(client, params);
+	else if (cmd == "PING")
+		_cmdPing(client, params);
 	else
 		_sendMsg(client.getFd(), ":ft_irc 421 * " + cmd + " :Unknown command\r\n");
 }
@@ -131,4 +136,29 @@ std::vector<std::string> Server::_splitIrcParams(const std::string &rest) const
 void Server::_sendMsg(int fd, const std::string &msg) const
 {
 	send(fd, msg.c_str(), msg.size(), 0);
+}
+
+// Handle QUIT command: Disconnect gracefully
+void Server::_cmdQuit(Client &client, const std::vector<std::string> &params)
+{
+	std::string quitMsg = "QUIT";
+	if (!params.empty())
+		quitMsg += " :" + params[0];
+	
+	// Notify all channels before closing
+	_handleClientDisconnect(client);
+	
+	// Send quit message to client, then close connection
+	_sendMsg(client.getFd(), ":ft_irc QUIT :" + quitMsg + "\r\n");
+	close(client.getFd());
+}
+
+// Handle PING command: Echo back PONG
+void Server::_cmdPing(Client &client, const std::vector<std::string> &params)
+{
+	std::string response = ":ft_irc PONG ft_irc";
+	if (!params.empty())
+		response += " " + params[0];
+	response += "\r\n";
+	_sendMsg(client.getFd(), response);
 }

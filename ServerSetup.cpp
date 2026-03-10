@@ -142,6 +142,8 @@ void Server::_handleClientData(std::vector<struct pollfd> &pollfds)
 			Client *c = _clients[pollfds[i].fd];
 			if (c)
 			{
+				// Notify other users in channels before deletion
+				_handleClientDisconnect(*c);
 				if (!c->getNickname().empty())
 					_nickToFd.erase(c->getNickname());
 				delete c;

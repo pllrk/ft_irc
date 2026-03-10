@@ -29,7 +29,10 @@ private:
 	void _cmdJoin(Client &client, const std::vector<std::string> &params);
 	void _cmdPart(Client &client, const std::vector<std::string> &params);
 	void _cmdPrivMsg(Client &client, const std::vector<std::string> &params, const std::string &msg);
+	void _cmdQuit(Client &client, const std::vector<std::string> &params);
+	void _cmdPing(Client &client, const std::vector<std::string> &params);
 	void _tryRegister(Client &client);
+	void _handleClientDisconnect(Client &client);
 
 	std::vector<std::string> _splitIrcParams(const std::string &rest) const;
 	std::string _toUpper(const std::string &s) const;

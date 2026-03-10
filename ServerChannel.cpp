@@ -146,3 +146,40 @@ void Server::_cmdPrivMsg(Client &client, const std::vector<std::string> &params,
 		_sendMsg(nickIt->second, fullMsg);
 	}
 }
+
+void Server::_handleClientDisconnect(Client &client)
+{
+    std::string quitMsg = ":" + client.getNickname() + " QUIT :Client disconnected\r\n";
+    
+    // Iterate through all channels
+    std::map<std::string, Channel*>::iterator it = _channels.begin();
+    while (it != _channels.end())
+    {
+        Channel *channel = it->second;
+        
+        // If client is in this channel
+        if (channel->hasMember(client.getFd()))
+        {
+            // Notify all other members
+            const std::map<int, Client*> &members = channel->getMembers();
+            for (std::map<int, Client*>::const_iterator mit = members.begin();
+                 mit != members.end(); ++mit)
+            {
+                if (mit->first != client.getFd())
+                    _sendMsg(mit->first, quitMsg);
+            }
+            
+            // Remove client from channel
+            channel->removeMember(client.getFd());
+            
+            // Delete channel if empty
+            if (channel->getMemberCount() == 0)
+            {
+                delete channel;
+                _channels.erase(it++);
+                continue;
+            }
+        }
+        ++it;
+    }
+}
