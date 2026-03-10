@@ -2,8 +2,11 @@ NAME = ft_irc
 CC = c++
 CFLAGS = -Wall -Werror -Wextra -g -std=c++98
 SRCS =	main.cpp \
-		Server.cpp \
 		Client.cpp \
+		ServerSetup.cpp \
+		ServerClient.cpp \
+		ServerChannel.cpp \
+		Channel.cpp
 		
 OBJS = ${SRCS:.cpp=.o}
 
