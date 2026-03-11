@@ -8,6 +8,7 @@
 #include <poll.h>
 #include <cstdlib>
 #include <map>
+#include <fcntl.h>
 
 // Constructor: Initialize server with port and password
 Server::Server(int port, const std::string &password)
@@ -50,6 +51,13 @@ void Server::run()
 	if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 	{
 		std::cerr << "Error: setsockopt failed" << std::endl;
+		close(_serverFd);
+		exit(EXIT_FAILURE);
+	}
+
+	if (fcntl(_serverFd, F_SETFL, O_NONBLOCK) == -1)
+	{
+		std::cerr << "Error: failed to set server socket non-blocking" << std::endl;
 		close(_serverFd);
 		exit(EXIT_FAILURE);
 	}
@@ -110,6 +118,13 @@ void Server::_eventloop()
 			}
 			else
 			{
+				if (fcntl(clientFd, F_SETFL, O_NONBLOCK) == -1)
+				{
+					std::cerr << "Error: failed to set client socket non-blocking" << std::endl;
+					close(clientFd);
+					continue;
+				}
+
 				Client *c = new Client(clientFd, "", "", "");
 				_clients[clientFd] = c;
 
@@ -126,11 +141,39 @@ void Server::_eventloop()
 	}
 }
 
+void Server::_removeClient(int fd)
+{
+	std::map<int, Client*>::iterator it = _clients.find(fd);
+	if (it == _clients.end())
+		return;
+
+	Client *client = it->second;
+	if (client)
+	{
+		_handleClientDisconnect(*client);
+		if (!client->getNickname().empty())
+			_nickToFd.erase(client->getNickname());
+		delete client;
+	}
+	_clients.erase(it);
+	close(fd);
+	std::cout << "Client disconnected: fd " << fd << std::endl;
+}
+
 // Handle incoming data from all connected clients
 void Server::_handleClientData(std::vector<struct pollfd> &pollfds)
 {
 	for (size_t i = 1; i < pollfds.size(); ++i)
 	{
+		if (pollfds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+		{
+			int fd = pollfds[i].fd;
+			pollfds.erase(pollfds.begin() + i);
+			_removeClient(fd);
+			--i;
+			continue;
+		}
+
 		if (!(pollfds[i].revents & POLLIN))
 			continue;
 
@@ -139,21 +182,10 @@ void Server::_handleClientData(std::vector<struct pollfd> &pollfds)
 
 		if (bytesRead <= 0)
 		{
-			Client *c = _clients[pollfds[i].fd];
-			if (c)
-			{
-				// Notify other users in channels before deletion
-				_handleClientDisconnect(*c);
-				if (!c->getNickname().empty())
-					_nickToFd.erase(c->getNickname());
-				delete c;
-			}
-			_clients.erase(pollfds[i].fd);
-			close(pollfds[i].fd);
+			int fd = pollfds[i].fd;
 			pollfds.erase(pollfds.begin() + i);
+			_removeClient(fd);
 			--i;
-
-			std::cout << "Client disconnected: fd " << (pollfds.size() > i ? pollfds[i].fd : -1) << std::endl;
 		}
 		else
 		{
@@ -173,12 +205,23 @@ void Server::_handleClientData(std::vector<struct pollfd> &pollfds)
 			{
 				std::string line = pending.substr(0, pos);
 				pending.erase(0, pos + 1);
-
 				if (!line.empty() && line[line.size() - 1] == '\r')
 					line.erase(line.size() - 1);
 
 				if (!line.empty())
 					_handleCommand(*c, line);
+
+				if (c->shouldQuit())
+					break;
+			}
+
+			if (c->shouldQuit())
+			{
+				int fd = pollfds[i].fd;
+				pollfds.erase(pollfds.begin() + i);
+				_removeClient(fd);
+				--i;
+				continue;
 			}
 
 			if (!pending.empty())

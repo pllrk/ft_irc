@@ -13,6 +13,9 @@ private:
 	bool _isRegistered;
 	bool _isAuthenticated;
 	std::string _buffer;
+	bool _shouldQuit;
+	std::string _quitMessage;
+	bool _capPending;    // true while CAP negotiation is in progress
 
 public:
 	Client(int fd, const std::string &nickname, const std::string &username, const std::string &realname);
@@ -26,6 +29,10 @@ public:
 	bool isRegistered() const;
 	bool isAuthenticated() const;
 	std::string getBuffer() const;
+	bool shouldQuit() const;
+	std::string getQuitMessage() const;
+	bool isCapPending() const;
+	void setCapPending(bool val);
 
 	// Setters
 	void setNickname(const std::string &nickname);
@@ -33,6 +40,8 @@ public:
 	void setRealname(const std::string &realname);
 	void setRegistered(bool registered);
 	void setAuthenticated(bool authenticated);
+	void setShouldQuit(bool shouldQuit);
+	void setQuitMessage(const std::string &quitMessage);
 
 	// Buffer management
 	void appendToBuffer(const std::string &data);

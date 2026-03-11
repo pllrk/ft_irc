@@ -2,7 +2,7 @@
 
 // Constructor: Initialize channel with name
 Channel::Channel(const std::string &name)
-	: _name(name), _topic("")
+	: _name(name), _topic(""), _inviteOnly(false), _topicRestricted(false), _key(""), _userLimit(0)
 {
 }
 
@@ -49,12 +49,27 @@ void Channel::setTopic(const std::string &topic)
 	_topic = topic;
 }
 
+bool Channel::isInviteOnly() const { return _inviteOnly; }
+bool Channel::isTopicRestricted() const { return _topicRestricted; }
+const std::string &Channel::getKey() const { return _key; }
+int Channel::getUserLimit() const { return _userLimit; }
+bool Channel::isInvited(int fd) const { return _inviteList.find(fd) != _inviteList.end(); }
+
+void Channel::setInviteOnly(bool val) { _inviteOnly = val; }
+void Channel::setTopicRestricted(bool val) { _topicRestricted = val; }
+void Channel::setKey(const std::string &key) { _key = key; }
+void Channel::setUserLimit(int limit) { _userLimit = limit; }
+
+void Channel::addInvite(int fd) { _inviteList.insert(fd); }
+void Channel::removeInvite(int fd) { _inviteList.erase(fd); }
+
 // Add member to channel (first to join becomes operator)
 void Channel::addMember(int fd, Client *client, bool isOp)
 {
 	_members[fd] = client;
 	if (isOp || _members.size() == 1)
 		_operators.insert(fd);
+	_inviteList.erase(fd);
 }
 
 // Remove member from channel

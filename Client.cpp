@@ -3,7 +3,7 @@
 
 // Constructor: Initialize client with file descriptor and optional data
 Client::Client(int fd, const std::string &nickname, const std::string &username, const std::string &realname)
-	: _fd(fd), _nickname(nickname), _username(username), _realname(realname), _isRegistered(false), _isAuthenticated(false), _buffer("")
+	: _fd(fd), _nickname(nickname), _username(username), _realname(realname), _isRegistered(false), _isAuthenticated(false), _buffer(""), _shouldQuit(false), _quitMessage("Client disconnected"), _capPending(false)
 {
 }
 
@@ -20,6 +20,8 @@ int Client::getFd() const
 
 std::string Client::getNickname() const
 {
+	if (_nickname.empty())
+		return "*";
 	return _nickname;
 }
 
@@ -48,6 +50,16 @@ std::string Client::getBuffer() const
 	return _buffer;
 }
 
+bool Client::shouldQuit() const
+{
+	return _shouldQuit;
+}
+
+std::string Client::getQuitMessage() const
+{
+	return _quitMessage;
+}
+
 // Setters
 void Client::setNickname(const std::string &nickname)
 {
@@ -72,6 +84,19 @@ void Client::setRegistered(bool registered)
 void Client::setAuthenticated(bool authenticated)
 {
 	_isAuthenticated = authenticated;
+}
+
+bool Client::isCapPending() const { return _capPending; }
+void Client::setCapPending(bool val) { _capPending = val; }
+
+void Client::setShouldQuit(bool shouldQuit)
+{
+	_shouldQuit = shouldQuit;
+}
+
+void Client::setQuitMessage(const std::string &quitMessage)
+{
+	_quitMessage = quitMessage;
 }
 
 // Append data to the client's message buffer

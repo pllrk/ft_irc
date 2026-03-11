@@ -7,6 +7,7 @@
 #include <poll.h>
 #include "Client.hpp"
 #include "Channel.hpp"
+#include <iostream>
 
 class Server
 {
@@ -21,19 +22,28 @@ private:
 
 	void _eventloop();
 	void _handleClientData(std::vector<struct pollfd> &pollfds);
+	void _removeClient(int fd);
 
 	void _handleCommand(Client &client, const std::string &line);
 	void _cmdPass(Client &client, const std::vector<std::string> &params);
 	void _cmdNick(Client &client, const std::vector<std::string> &params);
 	void _cmdUser(Client &client, const std::vector<std::string> &params);
+	void _cmdCap(Client &client, const std::vector<std::string> &params);
 	void _cmdJoin(Client &client, const std::vector<std::string> &params);
 	void _cmdPart(Client &client, const std::vector<std::string> &params);
 	void _cmdPrivMsg(Client &client, const std::vector<std::string> &params, const std::string &msg);
+	void _cmdKick(Client &client, const std::vector<std::string> &params);
+	void _cmdInvite(Client &client, const std::vector<std::string> &params);
+	void _cmdTopic(Client &client, const std::vector<std::string> &params, const std::string &msg);
+	void _cmdMode(Client &client, const std::vector<std::string> &params);
+	void _cmdWho(Client &client, const std::vector<std::string> &params);
 	void _cmdQuit(Client &client, const std::vector<std::string> &params);
 	void _cmdPing(Client &client, const std::vector<std::string> &params);
 	void _tryRegister(Client &client);
 	void _handleClientDisconnect(Client &client);
 
+	void _broadcastToChannel(Channel *channel, const std::string &msg, int exceptFd);
+	std::string _clientPrefix(const Client &client) const;
 	std::vector<std::string> _splitIrcParams(const std::string &rest) const;
 	std::string _toUpper(const std::string &s) const;
 	void _sendMsg(int fd, const std::string &msg) const;

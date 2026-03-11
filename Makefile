@@ -1,4 +1,4 @@
-NAME = ft_irc
+NAME = ircserv
 CC = c++
 CFLAGS = -Wall -Werror -Wextra -g -std=c++98
 SRCS =	main.cpp \
@@ -6,6 +6,7 @@ SRCS =	main.cpp \
 		ServerSetup.cpp \
 		ServerClient.cpp \
 		ServerChannel.cpp \
+		ServerMode.cpp \
 		Channel.cpp
 		
 OBJS = ${SRCS:.cpp=.o}
