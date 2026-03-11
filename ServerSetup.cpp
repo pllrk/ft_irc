@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include <unistd.h>
+#include <cerrno>
 #include <sys/socket.h>
 #include <iostream>
 #include <cstring>
@@ -84,6 +85,7 @@ void Server::run()
 
 	std::cout << "Server listening on port " << _port << std::endl;
 	_eventloop();
+	std::cout << "Server shutting down." << std::endl;
 }
 
 // Main poll loop: Accept connections and handle client data
@@ -97,11 +99,15 @@ void Server::_eventloop()
 	listenPollfd.revents = 0;
 	pollfds.push_back(listenPollfd);
 
-	while (true)
+	extern bool g_running;
+
+	while (g_running)
 	{
 		int pollCount = poll(pollfds.data(), pollfds.size(), -1);
 		if (pollCount == -1)
 		{
+			if (errno == EINTR)
+				break;
 			std::cerr << "Error: poll failed" << std::endl;
 			break;
 		}

@@ -1,8 +1,16 @@
 #include <string>
 #include <iostream>
 #include <cstdlib>
+#include <csignal>
 #include "Server.hpp"
 
+bool g_running = true;
+
+static void signalHandler(int signum)
+{
+	(void)signum;
+	g_running = false;
+}
 
 int main(int argc, char** argv)
 {
@@ -30,6 +38,10 @@ int main(int argc, char** argv)
 	}
 	try
 	{
+		signal(SIGINT, signalHandler);
+		signal(SIGTERM, signalHandler);
+		signal(SIGPIPE, SIG_IGN);
+
 		// Start server lifecycle: socket setup + poll loop.
 		Server server(port, password);
 		server.run();
